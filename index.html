@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Champions League - Cruzamento Oficial</title>
+    <style>
+        :root {
+            --ucl-blue: #001035;
+            --ucl-gold: #d4af37;
+            --ucl-light-blue: #00d4ff;
+            --card-bg: rgba(0, 20, 60, 0.9);
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at center, #001c4d 0%, #00081a 100%);
+            color: white; margin: 0; padding: 20px; min-height: 100vh;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .grupo, .match-card, .campeao-final { 
+                border: 2px solid #001035 !important; 
+                background: white !important; 
+                color: black !important;
+                page-break-inside: avoid;
+            }
+            .campeao-final h1 { color: #d4af37 !important; font-size: 40pt !important; }
+        }
+
+        .setup-section { background: var(--card-bg); border: 1px solid var(--ucl-light-blue); padding: 40px; border-radius: 20px; text-align: center; max-width: 800px; margin: 40px auto; }
+        textarea { width: 100%; height: 100px; background: rgba(255,255,255,0.1); border: 1px solid var(--ucl-light-blue); color: white; padding: 15px; border-radius: 10px; }
+        
+        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .grupo { background: #001a40; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; }
+        .grupo h3 { color: var(--ucl-light-blue); border-bottom: 2px solid var(--ucl-gold); margin-bottom: 10px; }
+        
+        .diagrama-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; overflow-x: auto; padding-bottom: 30px; }
+        .fase-col { display: flex; flex-direction: column; justify-content: space-around; min-width: 210px; }
+        .fase-col h4 { text-align: center; color: var(--ucl-gold); text-transform: uppercase; border-bottom: 1px solid var(--ucl-gold); }
+        
+        .match-card { background: #001a40; border-left: 4px solid var(--ucl-light-blue); margin: 10px 0; padding: 10px; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .team-row { display: flex; justify-content: space-between; align-items: center; margin: 4px 0; }
+        .team-row input[type="text"] { background: transparent; border: none; color: white; font-weight: bold; width: 120px; font-size: 13px; }
+        
+        input[type="number"] { width: 35px; text-align: center; font-weight: bold; border-radius: 4px; border: none; background: #fff; color: #000; }
+        
+        .win-check { cursor: pointer; width: 22px; height: 22px; background: #1a3a6d; border-radius: 50%; text-align: center; line-height: 22px; font-size: 10px; font-weight: bold; }
+        .win-check.active { background: var(--ucl-gold); color: black; box-shadow: 0 0 10px var(--ucl-gold); }
+
+        .campeao-final { display: none; text-align: center; background: #001a40; border: 3px solid var(--ucl-gold); border-radius: 20px; padding: 40px; margin: 40px auto; max-width: 600px; box-shadow: 0 0 30px var(--ucl-gold); }
+        .campeao-final h1 { color: var(--ucl-gold); font-size: 3.5em; margin: 10px 0; }
+        
+        .btn-main { background: linear-gradient(to right, #00d4ff, #0055ff); color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; margin: 10px; text-transform: uppercase; }
+        .export-box { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="setup" class="setup-section no-print">
+        <h1>🏆 Champions Cup</h1>
+        <p>Insere as 24 equipas:</p>
+        <textarea id="listaEquipas">Real Madrid&#10;Man City&#10;Bayern&#10;PSG&#10;Inter&#10;Benfica&#10;Porto&#10;Sporting&#10;Arsenal&#10;Barcelona&#10;Dortmund&#10;Atletico&#10;Napoli&#10;Liverpool&#10;Leverkusen&#10;Juventus&#10;Milan&#10;Aston Villa&#10;Leipzig&#10;Monaco&#10;PSV&#10;Feyenoord&#10;Shakhtar&#10;Celtic</textarea>
+        <br><br>
+        <button class="btn-main" onclick="gerarTorneio()">Iniciar Competição</button>
+    </div>
+
+    <div id="torneio" class="hidden">
+        <h2 style="text-align: center;">Fase de Grupos</h2>
+        <div class="grid-grupos" id="containerGrupos"></div>
+        
+        <div style="text-align: center; margin: 30px 0;" class="no-print">
+            <button class="btn-main" style="background: var(--ucl-gold);" onclick="apurarOitavos()">Avançar para Oitavos (1ºs vs 2ºs)</button>
+        </div>
+
+        <div id="eliminatorias" class="hidden">
+            <h2 style="text-align: center;">Mata-Mata</h2>
+            <div class="diagrama-container">
+                <div class="fase-col" id="col-oitavos"><h4>Oitavos</h4></div>
+                <div class="fase-col" id="col-quartos"><h4>Quartos</h4></div>
+                <div class="fase-col" id="col-meias"><h4>Meias</h4></div>
+                <div class="fase-col" id="col-final"><h4>Final</h4></div>
+            </div>
+        </div>
+
+        <div id="quadro-campeao" class="campeao-final">
+            <div style="font-size: 60px;">🏆</div>
+            <p style="color: var(--ucl-gold); letter-spacing: 3px;">CAMPEÃO</p>
+            <h1 id="nome-campeao">---</h1>
+            <p>Relatório Final de Torneio</p>
+        </div>
+    </div>
+
+    <div class="export-box no-print hidden" id="pdfBtnBox">
+        <button class="btn-main" style="background: #238636;" onclick="window.print()">📄 Tirar PDF</button>
+        <button class="btn-main" style="background: #444;" onclick="location.reload()">🔄 Reiniciar</button>
+    </div>
+
+    <script>
+        function gerarTorneio() {
+            const input = document.getElementById('listaEquipas').value;
+            const equipas = input.split('\n').map(e => e.trim()).filter(e => e !== "");
+            if(equipas.length < 24) { alert("Mete 24 equipas!"); return; }
+            equipas.sort(() => Math.random() - 0.5);
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('torneio').classList.remove('hidden');
+
+            const container = document.getElementById('containerGrupos');
+            const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            letras.forEach(L => {
+                const e = [equipas.shift(), equipas.shift(), equipas.shift()];
+                container.innerHTML += `
+                <div class="grupo" id="g-${L}">
+                    <h3>Grupo ${L}</h3>
+                    <table>
+                        <tr id="row-${L}-0"><td>${e[0]}</td><td class="p">0</td><td class="dg">0</td></tr>
+                        <tr id="row-${L}-1"><td>${e[1]}</td><td class="p">0</td><td class="dg">0</td></tr>
+                        <tr id="row-${L}-2"><td>${e[2]}</td><td class="p">0</td><td class="dg">0</td></tr>
+                    </table>
+                    <div class="no-print" style="margin-top:10px">
+                        <input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"> <br>
+                        <input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"> <br>
+                        <input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')">
+                    </div>
+                </div>`;
+            });
+        }
+
+        function calc(L) {
+            const g = document.getElementById(`g-${L}`);
+            const inputs = g.querySelectorAll('input');
+            let s = [{p:0, dg:0}, {p:0, dg:0}, {p:0, dg:0}];
+            const f = (a, b, g1, g2) => {
+                if(g1==="" || g2==="") return;
+                let v1 = parseInt(g1), v2 = parseInt(g2);
+                s[a].dg += (v1-v2); s[b].dg += (v2-v1);
+                if(v1>v2) s[a].p+=3; else if(v2>v1) s[b].p+=3; else {s[a].p++; s[b].p++;}
+            };
+            f(0, 1, inputs[0].value, inputs[1].value); f(1, 2, inputs[2].value, inputs[3].value); f(2, 0, inputs[4].value, inputs[5].value);
+            for(let i=0; i<3; i++) {
+                g.querySelector(`#row-${L}-${i} .p`).innerText = s[i].p;
+                g.querySelector(`#row-${L}-${i} .dg`).innerText = s[i].dg;
+            }
+        }
+
+        function apurarOitavos() {
+            document.getElementById('eliminatorias').classList.remove('hidden');
+            document.getElementById('pdfBtnBox').classList.remove('hidden');
+            const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            let ap = {};
+            letras.forEach(L => {
+                let l = [];
+                for(let i=0; i<3; i++) {
+                    const r = document.getElementById(`row-${L}-${i}`);
+                    l.push({ n: r.cells[0].innerText, p: parseInt(r.cells[1].innerText), dg: parseInt(r.cells[2].innerText) });
+                }
+                l.sort((a,b) => b.p - a.p || b.dg - a.dg);
+                ap[L] = { p: l[0].n, s: l[1].n };
+            });
+
+            // LÓGICA DE CRUZAMENTO: 1º vs 2º
+            const cruzamentos = [
+                [ap.A.p, ap.B.s], [ap.C.p, ap.D.s], [ap.E.p, ap.F.s], [ap.G.p, ap.H.s],
+                [ap.B.p, ap.A.s], [ap.D.p, ap.C.s], [ap.F.p, ap.E.s], [ap.H.p, ap.G.s]
+            ];
+
+            const cont = document.getElementById('col-oitavos');
+            cont.innerHTML = '<h4>Oitavos</h4>';
+            cruzamentos.forEach((jogo, i) => {
+                cont.innerHTML += `
+                <div class="match-card" id="m-o-${i}">
+                    <div class="team-row"><input type="text" value="${jogo[0]}" readonly> <input type="number" onchange="avancar('o',${i},'q')"> <span class="win-check" onclick="forcar('o',${i},0,'q')">V</span></div>
+                    <div class="team-row"><input type="text" value="${jogo[1]}" readonly> <input type="number" onchange="avancar('o',${i},'q')"> <span class="win-check" onclick="forcar('o',${i},1,'q')">V</span></div>
+                </div>`;
+            });
+            preGerar('q', 4, 'Quartos', 'm'); preGerar('m', 2, 'Meias', 'f'); preGerar('f', 1, 'Final', 'w');
+        }
+
+        function preGerar(f, n, t, p) {
+            const c = document.getElementById(`col-${{q:'quartos',m:'meias',f:'final'}[f]}`);
+            c.innerHTML = `<h4>${t}</h4>`;
+            for(let i=0; i<n; i++) {
+                c.innerHTML += `
+                <div class="match-card" id="m-${f}-${i}">
+                    <div class="team-row"><input type="text" placeholder="..." readonly> <input type="number" onchange="avancar('${f}',${i},'${p}')"> <span class="win-check" onclick="forcar('${f}',${i},0,'${p}')">V</span></div>
+                    <div class="team-row"><input type="text" placeholder="..." readonly> <input type="number" onchange="avancar('${f}',${i},'${p}')"> <span class="win-check" onclick="forcar('${f}',${i},1,'${p}')">V</span></div>
+                </div>`;
+            }
+        }
+
+        function avancar(f, i, p) {
+            const m = document.getElementById(`m-${f}-${i}`);
+            const n = m.querySelectorAll('input[type="text"]'), s = m.querySelectorAll('input[type="number"]'), checks = m.querySelectorAll('.win-check');
+            checks[0].classList.remove('active'); checks[1].classList.remove('active');
+            if(s[0].value==="" || s[1].value==="") return;
+            if(parseInt(s[0].value) > parseInt(s[1].value)) { checks[0].classList.add('active'); pass(n[0].value, i, p); }
+            else if(parseInt(s[1].value) > parseInt(s[0].value)) { checks[1].classList.add('active'); pass(n[1].value, i, p); }
+        }
+
+        function forcar(f, i, idx, p) {
+            const m = document.getElementById(`m-${f}-${i}`);
+            const n = m.querySelectorAll('input[type="text"]'), checks = m.querySelectorAll('.win-check');
+            if(n[idx].value === "" || n[idx].value === "...") return;
+            checks[0].classList.remove('active'); checks[1].classList.remove('active');
+            checks[idx].classList.add('active');
+            pass(n[idx].value, i, p);
+        }
+
+        function pass(v, i, p) {
+            if(p==='w') { 
+                document.getElementById('quadro-campeao').style.display = 'block';
+                document.getElementById('nome-campeao').innerText = v;
+                window.scrollTo(0, document.body.scrollHeight);
+                return; 
+            }
+            const pm = document.getElementById(`m-${p}-${Math.floor(i/2)}`);
+            pm.querySelectorAll('input[type="text"]')[i%2].value = v;
+        }
+    </script>
+</body>
+</html>
