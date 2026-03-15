@@ -70,7 +70,6 @@
             color: #fff; padding: 5px; border-radius: 5px; flex: 1;
         }
 
-        /* Estilo dos Grupos com Calendário */
         .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
         .grupo { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
         
@@ -88,7 +87,7 @@
         .team-row { display: flex; justify-content: space-between; margin: 5px 0; }
         input[type="number"] { width: 30px; text-align: center; font-weight: bold; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; border-radius: 4px; }
         
-        .win-check { cursor: pointer; width: 20px; height: 20px; border: 1px solid var(--ucl-accent); border-radius: 50%; text-align: center; font-size: 10px; }
+        .win-check { cursor: pointer; width: 20px; height: 20px; border: 1px solid var(--ucl-accent); border-radius: 50%; text-align: center; font-size: 10px; line-height: 18px; display: inline-block; }
         .win-check.active { background: var(--ucl-gold); border-color: var(--ucl-gold); color: #000; }
         .btn-main { background: linear-gradient(90deg, #00d4ff, #0055ff); color: #fff; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; }
         .campeao-final { display: none; text-align: center; padding: 40px; border: 2px solid var(--ucl-gold); border-radius: 20px; margin-top: 20px; }
@@ -184,30 +183,13 @@
         let historico = JSON.parse(localStorage.getItem('fifa_hof')) || iniciais;
         let scores = JSON.parse(localStorage.getItem('fifa_records')) || { goncalo: 0, tomas: 0 };
 
-        function updateGlobalScore(p) { 
-            scores[p]++; 
-            localStorage.setItem('fifa_records', JSON.stringify(scores)); 
-            renderHOF(); 
-        }
-
-        function resetGlobalScore() {
-            if(confirm("Queres mesmo colocar o placar Gonçalo vs Tomás a zeros?")) {
-                scores = { goncalo: 0, tomas: 0 };
-                localStorage.setItem('fifa_records', JSON.stringify(scores));
-                renderHOF();
-            }
-        }
+        function updateGlobalScore(p) { scores[p]++; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); }
+        function resetGlobalScore() { if(confirm("Reiniciar placar?")) { scores = { goncalo: 0, tomas: 0 }; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); } }
 
         function addFinalManual() {
             const v = document.getElementById('man-venc').value;
             const p = document.getElementById('man-perdeu').value;
-            if(v && p) {
-                historico.unshift({v: v, p: p});
-                localStorage.setItem('fifa_hof', JSON.stringify(historico));
-                renderHOF();
-                document.getElementById('man-venc').value = '';
-                document.getElementById('man-perdeu').value = '';
-            }
+            if(v && p) { historico.unshift({v: v, p: p}); localStorage.setItem('fifa_hof', JSON.stringify(historico)); renderHOF(); }
         }
 
         function renderHOF() {
@@ -225,24 +207,6 @@
             Object.keys(contagem).sort((a,b) => contagem[b] - contagem[a]).forEach(clube => {
                 ranking.innerHTML += `<tr><td>${clube}</td><td><b>${contagem[clube]}</b> 🏆</td></tr>`;
             });
-        }
-
-        function exportarBackup() {
-            const code = btoa(JSON.stringify({h: historico, s: scores}));
-            prompt("Copia este código:", code);
-        }
-
-        function importarBackup() {
-            const code = prompt("Cola o código:");
-            if(code) {
-                try {
-                    const d = JSON.parse(atob(code));
-                    historico = d.h; scores = d.s;
-                    localStorage.setItem('fifa_hof', JSON.stringify(historico));
-                    localStorage.setItem('fifa_records', JSON.stringify(scores));
-                    renderHOF();
-                } catch(e) { alert("Erro!"); }
-            }
         }
 
         function gerarTorneio() {
@@ -265,7 +229,6 @@
                         <tr id="row-${L}-1"><td>${e[1]}</td><td class="p">0</td><td class="dg">0</td></tr>
                         <tr id="row-${L}-2"><td>${e[2]}</td><td class="p">0</td><td class="dg">0</td></tr>
                     </table>
-                    
                     <div class="jogos-area no-print">
                         <div class="inputs-placar">
                             <div><input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"></div>
@@ -315,7 +278,19 @@
                 l.sort((a,b) => b.p - a.p || b.dg - a.dg); 
                 ap[L] = { p: l[0].n, s: l[1].n };
             });
-            const cruzamentos = [[ap.A.p, ap.B.s], [ap.C.p, ap.D.s], [ap.E.p, ap.F.s], [ap.G.p, ap.H.s], [ap.B.p, ap.A.s], [ap.D.p, ap.C.s], [ap.F.p, ap.E.s], [ap.H.p, ap.G.s]];
+
+            // LOGICA DE CRUZAMENTO A-B, C-D, E-F, G-H
+            const cruzamentos = [
+                [ap.A.p, ap.B.s], // Jogo 1: 1ºA vs 2ºB
+                [ap.B.p, ap.A.s], // Jogo 2: 1ºB vs 2ºA
+                [ap.C.p, ap.D.s], // Jogo 3: 1ºC vs 2ºD
+                [ap.D.p, ap.C.s], // Jogo 4: 1ºD vs 2ºC
+                [ap.E.p, ap.F.s], // Jogo 5: 1ºE vs 2ºF
+                [ap.F.p, ap.E.s], // Jogo 6: 1ºF vs 2ºE
+                [ap.G.p, ap.H.s], // Jogo 7: 1ºG vs 2ºH
+                [ap.H.p, ap.G.s]  // Jogo 8: 1ºH vs 2ºG
+            ];
+
             const cont = document.getElementById('col-oitavos'); cont.innerHTML = '<h4>Oitavos</h4>';
             cruzamentos.forEach((jogo, i) => {
                 cont.innerHTML += `<div class="match-card" id="m-o-${i}">
@@ -339,8 +314,8 @@
             const n = m.querySelectorAll('input[type="text"]'), s = m.querySelectorAll('input[type="number"]'), checks = m.querySelectorAll('.win-check');
             checks[0].classList.remove('active'); checks[1].classList.remove('active');
             if(s[0].value==="" || s[1].value==="") return;
-            if(parseInt(s[0].value) > parseInt(s[1].value)) { checks[0].classList.add('active'); pass(n[0].value, i, p); }
-            else if(parseInt(s[1].value) > parseInt(s[0].value)) { checks[1].classList.add('active'); pass(n[1].value, i, p); }
+            let idx = parseInt(s[0].value) > parseInt(s[1].value) ? 0 : 1;
+            checks[idx].classList.add('active'); pass(n[idx].value, i, p);
         }
 
         function forcar(f, i, idx, p) {
@@ -352,11 +327,7 @@
         }
 
         function pass(v, i, p) {
-            if(p==='w') { 
-                document.getElementById('quadro-campeao').style.display = 'block';
-                document.getElementById('nome-campeao').innerText = v;
-                return; 
-            }
+            if(p==='w') { document.getElementById('quadro-campeao').style.display = 'block'; document.getElementById('nome-campeao').innerText = v; return; }
             const pm = document.getElementById(`m-${p}-${Math.floor(i/2)}`);
             pm.querySelectorAll('input[type="text"]')[i%2].value = v;
         }
