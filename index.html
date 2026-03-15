@@ -18,16 +18,22 @@
             color: #fff; margin: 0; padding: 20px; min-height: 100vh;
         }
 
-        /* Scoreboard Gonçalo vs Tomás */
         .scoreboard-global {
             display: flex; justify-content: center; gap: 20px; margin-bottom: 30px;
             padding: 15px; background: var(--glass); backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border); border-radius: 15px;
+            position: relative;
         }
         .player-stat { text-align: center; min-width: 120px; }
         .player-stat h2 { margin: 0; font-size: 12px; color: var(--ucl-accent); text-transform: uppercase; }
         .player-stat .count { font-size: 32px; font-weight: 800; }
-        .player-stat button { background: none; border: 1px solid var(--ucl-accent); color: var(--ucl-accent); border-radius: 10px; cursor: pointer; font-size: 10px; }
+        .player-stat button { background: none; border: 1px solid var(--ucl-accent); color: var(--ucl-accent); border-radius: 10px; cursor: pointer; font-size: 10px; padding: 2px 8px; margin-top: 5px; }
+        
+        .btn-reset-score {
+            position: absolute; bottom: 8px; right: 15px; background: none; border: none; 
+            color: rgba(255,255,255,0.2); cursor: pointer; font-size: 9px; text-transform: uppercase;
+        }
+        .btn-reset-score:hover { color: #ff4444; }
 
         .setup-section {
             max-width: 900px; margin: 0 auto 40px; text-align: center;
@@ -39,7 +45,6 @@
             color: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px;
         }
 
-        /* Estilo das Tabelas de Histórico */
         .hall-of-fame-grid {
             display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;
             max-width: 900px; margin: 20px auto;
@@ -51,7 +56,6 @@
         }
 
         .hof-card h3 { color: var(--ucl-gold); margin-top: 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
-
         .table-wrapper { overflow-y: auto; flex-grow: 1; }
 
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -66,20 +70,32 @@
             color: #fff; padding: 5px; border-radius: 5px; flex: 1;
         }
 
-        /* Estilos do Torneio (Mantidos) */
-        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        /* Estilo dos Grupos com Calendário */
+        .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
         .grupo { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; padding: 15px; }
+        
+        .jogos-area { 
+            display: flex; align-items: flex-start; gap: 10px; 
+            margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--glass-border);
+        }
+        .inputs-placar { display: flex; flex-direction: column; gap: 5px; }
+        .labels-confronto { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; }
+        .confronto-text { font-size: 11px; height: 21px; display: flex; align-items: center; color: #ccc; overflow: hidden; white-space: nowrap; }
+
         .diagrama-container { display: flex; gap: 15px; overflow-x: auto; padding: 20px 0; }
         .fase-col { flex: 1; min-width: 220px; }
         .match-card { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-left: 3px solid var(--ucl-accent); margin-bottom: 10px; padding: 10px; border-radius: 8px; }
         .team-row { display: flex; justify-content: space-between; margin: 5px 0; }
-        input[type="number"] { width: 30px; text-align: center; font-weight: bold; }
+        input[type="number"] { width: 30px; text-align: center; font-weight: bold; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; border-radius: 4px; }
+        
         .win-check { cursor: pointer; width: 20px; height: 20px; border: 1px solid var(--ucl-accent); border-radius: 50%; text-align: center; font-size: 10px; }
         .win-check.active { background: var(--ucl-gold); border-color: var(--ucl-gold); color: #000; }
         .btn-main { background: linear-gradient(90deg, #00d4ff, #0055ff); color: #fff; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; }
         .campeao-final { display: none; text-align: center; padding: 40px; border: 2px solid var(--ucl-gold); border-radius: 20px; margin-top: 20px; }
         .hidden { display: none; }
         .export-box { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
@@ -88,6 +104,7 @@
         <div class="player-stat"><h2>Gonçalo</h2><div class="count" id="win-goncalo">0</div><button onclick="updateGlobalScore('goncalo')">+ Vit</button></div>
         <div style="font-size: 20px; align-self: center; color: var(--ucl-gold);">VS</div>
         <div class="player-stat"><h2>Tomás</h2><div class="count" id="win-tomas">0</div><button onclick="updateGlobalScore('tomas')">+ Vit</button></div>
+        <button class="btn-reset-score" onclick="resetGlobalScore()">Reiniciar Placar</button>
     </div>
 
     <div id="setup" class="setup-section no-print">
@@ -109,6 +126,10 @@
                     <input type="text" id="man-venc" placeholder="Vencedor">
                     <input type="text" id="man-perdeu" placeholder="2º Lugar">
                     <button class="btn-main" style="padding: 5px 10px;" onclick="addFinalManual()">+</button>
+                </div>
+                <div style="margin-top:8px; font-size:9px; opacity:0.5;">
+                   <span onclick="exportarBackup()" style="cursor:pointer">💾 Exportar Backup</span> | 
+                   <span onclick="importarBackup()" style="cursor:pointer">📂 Importar Backup</span>
                 </div>
             </div>
 
@@ -147,7 +168,6 @@
     </div>
 
     <script>
-        // --- DADOS INICIAIS ---
         const iniciais = [
             {v:"Manchester United", p:"Porto"}, {v:"Barcelona", p:"Juventus"},
             {v:"Atletico Madrid", p:"Manchester United"}, {v:"Inter", p:"Atletico Madrid"},
@@ -164,7 +184,19 @@
         let historico = JSON.parse(localStorage.getItem('fifa_hof')) || iniciais;
         let scores = JSON.parse(localStorage.getItem('fifa_records')) || { goncalo: 0, tomas: 0 };
 
-        function updateGlobalScore(p) { scores[p]++; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); }
+        function updateGlobalScore(p) { 
+            scores[p]++; 
+            localStorage.setItem('fifa_records', JSON.stringify(scores)); 
+            renderHOF(); 
+        }
+
+        function resetGlobalScore() {
+            if(confirm("Queres mesmo colocar o placar Gonçalo vs Tomás a zeros?")) {
+                scores = { goncalo: 0, tomas: 0 };
+                localStorage.setItem('fifa_records', JSON.stringify(scores));
+                renderHOF();
+            }
+        }
 
         function addFinalManual() {
             const v = document.getElementById('man-venc').value;
@@ -181,16 +213,13 @@
         function renderHOF() {
             document.getElementById('win-goncalo').innerText = scores.goncalo;
             document.getElementById('win-tomas').innerText = scores.tomas;
-
             const lista = document.getElementById('lista-finais');
             lista.innerHTML = '';
             let contagem = {};
-
             historico.forEach(f => {
                 lista.innerHTML += `<tr><td>⭐ <b>${f.v}</b></td><td>${f.p}</td></tr>`;
                 contagem[f.v] = (contagem[f.v] || 0) + 1;
             });
-
             const ranking = document.getElementById('ranking-clubes');
             ranking.innerHTML = '';
             Object.keys(contagem).sort((a,b) => contagem[b] - contagem[a]).forEach(clube => {
@@ -198,30 +227,64 @@
             });
         }
 
-        // --- LÓGICA DO TORNEIO (ORIGINAL) ---
+        function exportarBackup() {
+            const code = btoa(JSON.stringify({h: historico, s: scores}));
+            prompt("Copia este código:", code);
+        }
+
+        function importarBackup() {
+            const code = prompt("Cola o código:");
+            if(code) {
+                try {
+                    const d = JSON.parse(atob(code));
+                    historico = d.h; scores = d.s;
+                    localStorage.setItem('fifa_hof', JSON.stringify(historico));
+                    localStorage.setItem('fifa_records', JSON.stringify(scores));
+                    renderHOF();
+                } catch(e) { alert("Erro!"); }
+            }
+        }
+
         function gerarTorneio() {
             const input = document.getElementById('listaEquipas').value;
             const equipas = input.split('\n').map(e => e.trim()).filter(e => e !== "");
-            if(equipas.length < 24) return alert("24 equipas!");
+            if(equipas.length < 24) return alert("Precisas de 24 equipas!");
             equipas.sort(() => Math.random() - 0.5);
             document.getElementById('setup').classList.add('hidden');
             document.getElementById('torneio').classList.remove('hidden');
             const container = document.getElementById('containerGrupos');
             const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            
             letras.forEach(L => {
                 const e = [equipas.shift(), equipas.shift(), equipas.shift()];
-                container.innerHTML += `<div class="grupo" id="g-${L}"><h3>Grupo ${L}</h3>
-                <table><tr id="row-${L}-0"><td>${e[0]}</td><td class="p">0</td><td class="dg">0</td></tr>
-                <tr id="row-${L}-1"><td>${e[1]}</td><td class="p">0</td><td class="dg">0</td></tr>
-                <tr id="row-${L}-2"><td>${e[2]}</td><td class="p">0</td><td class="dg">0</td></tr></table>
-                <div class="no-print"><input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"><br>
-                <input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"><br>
-                <input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"></div></div>`;
+                container.innerHTML += `
+                <div class="grupo" id="g-${L}">
+                    <h3>Grupo ${L}</h3>
+                    <table>
+                        <tr id="row-${L}-0"><td>${e[0]}</td><td class="p">0</td><td class="dg">0</td></tr>
+                        <tr id="row-${L}-1"><td>${e[1]}</td><td class="p">0</td><td class="dg">0</td></tr>
+                        <tr id="row-${L}-2"><td>${e[2]}</td><td class="p">0</td><td class="dg">0</td></tr>
+                    </table>
+                    
+                    <div class="jogos-area no-print">
+                        <div class="inputs-placar">
+                            <div><input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"></div>
+                            <div><input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"></div>
+                            <div><input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"></div>
+                        </div>
+                        <div class="labels-confronto">
+                            <div class="confronto-text">⬅️ ${e[0]} vs ${e[1]}</div>
+                            <div class="confronto-text">⬅️ ${e[1]} vs ${e[2]}</div>
+                            <div class="confronto-text">⬅️ ${e[2]} vs ${e[0]}</div>
+                        </div>
+                    </div>
+                </div>`;
             });
         }
 
         function calc(L) {
-            const g = document.getElementById(`g-${L}`); const inputs = g.querySelectorAll('input');
+            const g = document.getElementById(`g-${L}`); 
+            const inputs = g.querySelectorAll('input[type="number"]');
             let s = [{p:0, dg:0}, {p:0, dg:0}, {p:0, dg:0}];
             const f = (a, b, g1, g2) => {
                 if(g1==="" || g2==="") return;
@@ -229,8 +292,13 @@
                 s[a].dg += (v1-v2); s[b].dg += (v2-v1);
                 if(v1>v2) s[a].p+=3; else if(v2>v1) s[b].p+=3; else {s[a].p++; s[b].p++;}
             };
-            f(0, 1, inputs[0].value, inputs[1].value); f(1, 2, inputs[2].value, inputs[3].value); f(2, 0, inputs[4].value, inputs[5].value);
-            for(let i=0; i<3; i++) { g.querySelector(`#row-${L}-${i} .p`).innerText = s[i].p; g.querySelector(`#row-${L}-${i} .dg`).innerText = s[i].dg; }
+            f(0, 1, inputs[0].value, inputs[1].value); 
+            f(1, 2, inputs[2].value, inputs[3].value); 
+            f(2, 0, inputs[4].value, inputs[5].value);
+            for(let i=0; i<3; i++) { 
+                g.querySelector(`#row-${L}-${i} .p`).innerText = s[i].p; 
+                g.querySelector(`#row-${L}-${i} .dg`).innerText = s[i].dg; 
+            }
         }
 
         function apurarOitavos() {
@@ -240,8 +308,12 @@
             let ap = {};
             letras.forEach(L => {
                 let l = [];
-                for(let i=0; i<3; i++) { const r = document.getElementById(`row-${L}-${i}`); l.push({ n: r.cells[0].innerText, p: parseInt(r.cells[1].innerText), dg: parseInt(r.cells[2].innerText) }); }
-                l.sort((a,b) => b.p - a.p || b.dg - a.dg); ap[L] = { p: l[0].n, s: l[1].n };
+                for(let i=0; i<3; i++) { 
+                    const r = document.getElementById(`row-${L}-${i}`); 
+                    l.push({ n: r.cells[0].innerText, p: parseInt(r.cells[1].innerText), dg: parseInt(r.cells[2].innerText) }); 
+                }
+                l.sort((a,b) => b.p - a.p || b.dg - a.dg); 
+                ap[L] = { p: l[0].n, s: l[1].n };
             });
             const cruzamentos = [[ap.A.p, ap.B.s], [ap.C.p, ap.D.s], [ap.E.p, ap.F.s], [ap.G.p, ap.H.s], [ap.B.p, ap.A.s], [ap.D.p, ap.C.s], [ap.F.p, ap.E.s], [ap.H.p, ap.G.s]];
             const cont = document.getElementById('col-oitavos'); cont.innerHTML = '<h4>Oitavos</h4>';
@@ -263,7 +335,8 @@
         }
 
         function avancar(f, i, p) {
-            const m = document.getElementById(`m-${f}-${i}`); const n = m.querySelectorAll('input[type="text"]'), s = m.querySelectorAll('input[type="number"]'), checks = m.querySelectorAll('.win-check');
+            const m = document.getElementById(`m-${f}-${i}`); 
+            const n = m.querySelectorAll('input[type="text"]'), s = m.querySelectorAll('input[type="number"]'), checks = m.querySelectorAll('.win-check');
             checks[0].classList.remove('active'); checks[1].classList.remove('active');
             if(s[0].value==="" || s[1].value==="") return;
             if(parseInt(s[0].value) > parseInt(s[1].value)) { checks[0].classList.add('active'); pass(n[0].value, i, p); }
@@ -271,7 +344,8 @@
         }
 
         function forcar(f, i, idx, p) {
-            const m = document.getElementById(`m-${f}-${i}`); const n = m.querySelectorAll('input[type="text"]'), checks = m.querySelectorAll('.win-check');
+            const m = document.getElementById(`m-${f}-${i}`); 
+            const n = m.querySelectorAll('input[type="text"]'), checks = m.querySelectorAll('.win-check');
             if(n[idx].value === "" || n[idx].value === "...") return;
             checks[0].classList.remove('active'); checks[1].classList.remove('active'); checks[idx].classList.add('active');
             pass(n[idx].value, i, p);
@@ -281,7 +355,6 @@
             if(p==='w') { 
                 document.getElementById('quadro-campeao').style.display = 'block';
                 document.getElementById('nome-campeao').innerText = v;
-                // Ao terminar, ele sugere salvar a final no histórico manualmente no setup
                 return; 
             }
             const pm = document.getElementById(`m-${p}-${Math.floor(i/2)}`);
