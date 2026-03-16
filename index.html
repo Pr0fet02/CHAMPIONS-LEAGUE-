@@ -36,7 +36,7 @@
         .btn-reset-score:hover { color: #ff4444; }
 
         .setup-section {
-            max-width: 900px; margin: 0 auto 40px; text-align: center;
+            max-width: 1100px; margin: 0 auto 40px; text-align: center;
             background: var(--glass); padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border);
         }
 
@@ -46,19 +46,19 @@
         }
 
         .hall-of-fame-grid {
-            display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;
-            max-width: 900px; margin: 20px auto;
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;
+            margin: 20px auto;
         }
 
         .hof-card {
             background: var(--glass); border: 1px solid var(--glass-border);
-            border-radius: 15px; padding: 20px; height: 400px; display: flex; flex-direction: column;
+            border-radius: 15px; padding: 15px; height: 400px; display: flex; flex-direction: column;
         }
 
-        .hof-card h3 { color: var(--ucl-gold); margin-top: 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; }
+        .hof-card h3 { color: var(--ucl-gold); margin-top: 0; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; font-size: 16px; }
         .table-wrapper { overflow-y: auto; flex-grow: 1; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { text-align: left; color: var(--ucl-accent); padding: 8px; border-bottom: 1px solid var(--glass-border); }
         td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
@@ -67,7 +67,7 @@
         }
         .manual-input input {
             background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);
-            color: #fff; padding: 5px; border-radius: 5px; flex: 1;
+            color: #fff; padding: 5px; border-radius: 5px; flex: 1; font-size: 11px;
         }
 
         .grid-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
@@ -85,60 +85,76 @@
         .fase-col { flex: 1; min-width: 220px; }
         .match-card { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-left: 3px solid var(--ucl-accent); margin-bottom: 10px; padding: 10px; border-radius: 8px; }
         .team-row { display: flex; justify-content: space-between; margin: 5px 0; }
-        input[type="number"] { width: 30px; text-align: center; font-weight: bold; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; border-radius: 4px; }
+        input[type="number"] { width: 35px; text-align: center; font-weight: bold; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; border-radius: 4px; }
         
         .win-check { cursor: pointer; width: 20px; height: 20px; border: 1px solid var(--ucl-accent); border-radius: 50%; text-align: center; font-size: 10px; line-height: 18px; display: inline-block; }
         .win-check.active { background: var(--ucl-gold); border-color: var(--ucl-gold); color: #000; }
-        .btn-main { background: linear-gradient(90deg, #00d4ff, #0055ff); color: #fff; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; }
-        .campeao-final { display: none; text-align: center; padding: 40px; border: 2px solid var(--ucl-gold); border-radius: 20px; margin-top: 20px; }
-        .hidden { display: none; }
-        .export-box { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
         
+        .btn-main { background: linear-gradient(90deg, #00d4ff, #0055ff); color: #fff; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; }
+        .btn-view { background: var(--ucl-accent); color: #000; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-delete { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 12px; padding: 0 5px; }
+
+        .campeao-final { display: none; text-align: center; padding: 40px; border: 2px solid var(--ucl-gold); border-radius: 20px; margin-top: 20px; background: rgba(0,0,0,0.5); }
+        .hidden { display: none; }
+        .view-only-mode input { pointer-events: none; border-color: transparent !important; }
+        .view-only-mode .no-print, .view-only-mode .btn-main { display: none !important; }
+        .view-only-mode #btn-voltar { display: block !important; position: fixed; top: 20px; left: 20px; z-index: 999; }
+        .export-box { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
 
-    <div class="scoreboard-global no-print">
-        <div class="player-stat"><h2>Gonçalo</h2><div class="count" id="win-goncalo">0</div><button onclick="updateGlobalScore('goncalo')">+ Vit</button></div>
-        <div style="font-size: 20px; align-self: center; color: var(--ucl-gold);">VS</div>
-        <div class="player-stat"><h2>Tomás</h2><div class="count" id="win-tomas">0</div><button onclick="updateGlobalScore('tomas')">+ Vit</button></div>
-        <button class="btn-reset-score" onclick="resetGlobalScore()">Reiniciar Placar</button>
-    </div>
+    <button id="btn-voltar" class="btn-main" style="display:none;" onclick="location.reload()">⬅️ Voltar ao Menu</button>
 
-    <div id="setup" class="setup-section no-print">
-        <h1>🏆 Champions Management</h1>
-        <textarea id="listaEquipas">Real Madrid&#10;Man City&#10;Bayern&#10;PSG&#10;Inter&#10;Benfica&#10;Porto&#10;Sporting&#10;Arsenal&#10;Barcelona&#10;Dortmund&#10;Atletico&#10;Napoli&#10;Liverpool&#10;Leverkusen&#10;Juventus&#10;Milan&#10;Aston Villa&#10;Leipzig&#10;Monaco&#10;PSV&#10;Feyenoord&#10;Shakhtar&#10;Celtic</textarea>
-        <br>
-        <button class="btn-main" onclick="gerarTorneio()">Sortear Torneio</button>
+    <div id="main-menu">
+        <div class="scoreboard-global no-print">
+            <div class="player-stat"><h2>Gonçalo</h2><div class="count" id="win-goncalo">0</div><button onclick="updateGlobalScore('goncalo')">+ Vit</button></div>
+            <div style="font-size: 20px; align-self: center; color: var(--ucl-gold);">VS</div>
+            <div class="player-stat"><h2>Tomás</h2><div class="count" id="win-tomas">0</div><button onclick="updateGlobalScore('tomas')">+ Vit</button></div>
+            <button class="btn-reset-score" onclick="resetGlobalScore()">Reiniciar Placar</button>
+        </div>
 
-        <div class="hall-of-fame-grid">
-            <div class="hof-card">
-                <h3>📜 Últimas Finais</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead><tr><th>Campeão</th><th>Finalista</th></tr></thead>
-                        <tbody id="lista-finais"></tbody>
-                    </table>
-                </div>
-                <div class="manual-input">
-                    <input type="text" id="man-venc" placeholder="Vencedor">
-                    <input type="text" id="man-perdeu" placeholder="2º Lugar">
-                    <button class="btn-main" style="padding: 5px 10px;" onclick="addFinalManual()">+</button>
-                </div>
-                <div style="margin-top:8px; font-size:9px; opacity:0.5;">
-                   <span onclick="exportarBackup()" style="cursor:pointer">💾 Exportar Backup</span> | 
-                   <span onclick="importarBackup()" style="cursor:pointer">📂 Importar Backup</span>
-                </div>
-            </div>
+        <div id="setup" class="setup-section no-print">
+            <h1>🏆 Champions Management</h1>
+            <textarea id="listaEquipas">Real Madrid&#10;Manchester City&#10;Bayern&#10;PSG&#10;Inter&#10;Benfica&#10;Porto&#10;Sporting&#10;Arsenal&#10;Barcelona&#10;Dortmund&#10;Atletico&#10;Napoli&#10;Liverpool&#10;Leverkusen&#10;Juventus&#10;Milan&#10;Aston Villa&#10;Leipzig&#10;Monaco&#10;PSV&#10;Feyenoord&#10;Shakhtar&#10;Celtic</textarea>
+            <br>
+            <button class="btn-main" onclick="gerarTorneio()">Sortear Torneio</button>
 
-            <div class="hof-card">
-                <h3>🏆 Ranking de Títulos</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead><tr><th>Clube</th><th>Títulos</th></tr></thead>
-                        <tbody id="ranking-clubes"></tbody>
-                    </table>
+            <div class="hall-of-fame-grid">
+                <div class="hof-card">
+                    <h3>📜 Histórico de Finais</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>Campeão</th><th>Finalista</th></tr></thead>
+                            <tbody id="lista-finais"></tbody>
+                        </table>
+                    </div>
+                    <div class="manual-input">
+                        <input type="text" id="man-venc" placeholder="Vencedor">
+                        <input type="text" id="man-perdeu" placeholder="2º Lugar">
+                        <button class="btn-main" style="padding: 5px 10px;" onclick="addFinalManual()">+</button>
+                    </div>
+                </div>
+
+                <div class="hof-card">
+                    <h3>🏆 Ranking Títulos</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>Clube</th><th>Títulos</th></tr></thead>
+                            <tbody id="ranking-clubes"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="hof-card">
+                    <h3>📅 Arquivo de Torneios</h3>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>Data</th><th>Final</th><th>Ações</th></tr></thead>
+                            <tbody id="log-torneios"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -146,7 +162,8 @@
 
     <div id="torneio" class="hidden">
         <div class="grid-grupos" id="containerGrupos"></div>
-        <div style="text-align: center; margin: 30px;" class="no-print"><button class="btn-main" onclick="apurarOitavos()">Apurar Oitavos</button></div>
+        <div style="text-align: center; margin: 30px;" class="no-print"><button id="btn-apurar" class="btn-main" onclick="apurarOitavos()">Apurar Oitavos</button></div>
+        
         <div id="eliminatorias" class="hidden">
             <div class="diagrama-container">
                 <div class="fase-col" id="col-oitavos"><h4>Oitavos</h4></div>
@@ -155,10 +172,12 @@
                 <div class="fase-col" id="col-final"><h4>Final</h4></div>
             </div>
         </div>
+
         <div id="quadro-campeao" class="campeao-final">
             <div style="font-size: 50px;">🏆</div>
             <h1 id="nome-campeao">---</h1>
-            <button class="btn-main" onclick="location.reload()">Terminar e Sair</button>
+            <p id="info-vice" style="color: #aaa; margin-bottom: 20px;"></p>
+            <button class="btn-main" id="btn-finalizar" style="background: var(--ucl-gold); color: #000;" onclick="salvarTorneioCompleto()">Registar e Sair</button>
         </div>
     </div>
 
@@ -181,32 +200,81 @@
         ];
 
         let historico = JSON.parse(localStorage.getItem('fifa_hof')) || iniciais;
+        let historicoCompleto = JSON.parse(localStorage.getItem('ucl_full_history')) || [];
         let scores = JSON.parse(localStorage.getItem('fifa_records')) || { goncalo: 0, tomas: 0 };
-
-        function updateGlobalScore(p) { scores[p]++; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); }
-        function resetGlobalScore() { if(confirm("Reiniciar placar?")) { scores = { goncalo: 0, tomas: 0 }; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); } }
-
-        function addFinalManual() {
-            const v = document.getElementById('man-venc').value;
-            const p = document.getElementById('man-perdeu').value;
-            if(v && p) { historico.unshift({v: v, p: p}); localStorage.setItem('fifa_hof', JSON.stringify(historico)); renderHOF(); }
-        }
+        let viceCampeaoGlobal = "";
 
         function renderHOF() {
             document.getElementById('win-goncalo').innerText = scores.goncalo;
             document.getElementById('win-tomas').innerText = scores.tomas;
-            const lista = document.getElementById('lista-finais');
-            lista.innerHTML = '';
+            const listaFinais = document.getElementById('lista-finais');
+            const rankingTable = document.getElementById('ranking-clubes');
+            const logTorneios = document.getElementById('log-torneios');
+            
+            listaFinais.innerHTML = '';
+            logTorneios.innerHTML = '';
             let contagem = {};
+
+            // INVERTIDO: Criamos uma cópia do histórico e invertemos para mostrar os últimos em cima
+            [...historico].reverse().forEach(f => {
+                listaFinais.innerHTML += `<tr><td>⭐ <b>${f.v}</b></td><td>${f.p}</td></tr>`;
+            });
+
+            // Contagem para o ranking (mantém a lógica normal baseada no histórico real)
             historico.forEach(f => {
-                lista.innerHTML += `<tr><td>⭐ <b>${f.v}</b></td><td>${f.p}</td></tr>`;
                 contagem[f.v] = (contagem[f.v] || 0) + 1;
             });
-            const ranking = document.getElementById('ranking-clubes');
-            ranking.innerHTML = '';
-            Object.keys(contagem).sort((a,b) => contagem[b] - contagem[a]).forEach(clube => {
-                ranking.innerHTML += `<tr><td>${clube}</td><td><b>${contagem[clube]}</b> 🏆</td></tr>`;
+
+            historicoCompleto.forEach((torneio, index) => {
+                logTorneios.innerHTML += `<tr>
+                    <td>${torneio.data}</td>
+                    <td>${torneio.v}</td>
+                    <td style="white-space:nowrap">
+                        <button class="btn-view" onclick="verTorneioAntigo(${index})">👁️</button>
+                        <button class="btn-delete" onclick="apagarRegistoCompleto(${index})">🗑️</button>
+                    </td>
+                </tr>`;
             });
+
+            rankingTable.innerHTML = '';
+            Object.keys(contagem).sort((a,b) => contagem[b] - contagem[a]).forEach(clube => {
+                rankingTable.innerHTML += `<tr><td>${clube}</td><td><b>${contagem[clube]}</b> 🏆</td></tr>`;
+            });
+        }
+
+        function updateGlobalScore(p) { scores[p]++; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); }
+        function resetGlobalScore() { if(confirm("Reiniciar placar?")) { scores = { goncalo: 0, tomas: 0 }; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); } }
+        
+        function addFinalManual() {
+            const v = document.getElementById('man-venc').value;
+            const p = document.getElementById('man-perdeu').value;
+            if(v && p) { 
+                historico.push({v: v, p: p}); 
+                localStorage.setItem('fifa_hof', JSON.stringify(historico)); 
+                renderHOF(); 
+            }
+            document.getElementById('man-venc').value = "";
+            document.getElementById('man-perdeu').value = "";
+        }
+
+        function salvarTorneioCompleto() {
+            const campeao = document.getElementById('nome-campeao').innerText;
+            const dataAgora = new Date().toLocaleString('pt-PT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+            const estrutura = document.getElementById('torneio').innerHTML;
+            const inputsData = Array.from(document.querySelectorAll('#torneio input')).map(i => ({
+                val: i.value,
+                active: i.parentElement.querySelector('.win-check')?.classList.contains('active') || false
+            }));
+            
+            const novoRegisto = { v: campeao, p: viceCampeaoGlobal, data: dataAgora, html: estrutura, inputs: inputsData };
+            
+            historicoCompleto.unshift(novoRegisto);
+            localStorage.setItem('ucl_full_history', JSON.stringify(historicoCompleto));
+            
+            historico.push({v: campeao, p: viceCampeaoGlobal});
+            localStorage.setItem('fifa_hof', JSON.stringify(historico));
+            
+            location.reload();
         }
 
         function gerarTorneio() {
@@ -217,12 +285,12 @@
             document.getElementById('setup').classList.add('hidden');
             document.getElementById('torneio').classList.remove('hidden');
             const container = document.getElementById('containerGrupos');
+            container.innerHTML = "";
             const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
             
             letras.forEach(L => {
                 const e = [equipas.shift(), equipas.shift(), equipas.shift()];
-                container.innerHTML += `
-                <div class="grupo" id="g-${L}">
+                container.innerHTML += `<div class="grupo" id="g-${L}">
                     <h3>Grupo ${L}</h3>
                     <table>
                         <tr id="row-${L}-0"><td>${e[0]}</td><td class="p">0</td><td class="dg">0</td></tr>
@@ -255,9 +323,7 @@
                 s[a].dg += (v1-v2); s[b].dg += (v2-v1);
                 if(v1>v2) s[a].p+=3; else if(v2>v1) s[b].p+=3; else {s[a].p++; s[b].p++;}
             };
-            f(0, 1, inputs[0].value, inputs[1].value); 
-            f(1, 2, inputs[2].value, inputs[3].value); 
-            f(2, 0, inputs[4].value, inputs[5].value);
+            f(0, 1, inputs[0].value, inputs[1].value); f(1, 2, inputs[2].value, inputs[3].value); f(2, 0, inputs[4].value, inputs[5].value);
             for(let i=0; i<3; i++) { 
                 g.querySelector(`#row-${L}-${i} .p`).innerText = s[i].p; 
                 g.querySelector(`#row-${L}-${i} .dg`).innerText = s[i].dg; 
@@ -278,19 +344,7 @@
                 l.sort((a,b) => b.p - a.p || b.dg - a.dg); 
                 ap[L] = { p: l[0].n, s: l[1].n };
             });
-
-            // LOGICA DE CRUZAMENTO A-B, C-D, E-F, G-H
-            const cruzamentos = [
-                [ap.A.p, ap.B.s], // Jogo 1: 1ºA vs 2ºB
-                [ap.B.p, ap.A.s], // Jogo 2: 1ºB vs 2ºA
-                [ap.C.p, ap.D.s], // Jogo 3: 1ºC vs 2ºD
-                [ap.D.p, ap.C.s], // Jogo 4: 1ºD vs 2ºC
-                [ap.E.p, ap.F.s], // Jogo 5: 1ºE vs 2ºF
-                [ap.F.p, ap.E.s], // Jogo 6: 1ºF vs 2ºE
-                [ap.G.p, ap.H.s], // Jogo 7: 1ºG vs 2ºH
-                [ap.H.p, ap.G.s]  // Jogo 8: 1ºH vs 2ºG
-            ];
-
+            const cruzamentos = [[ap.A.p, ap.B.s], [ap.B.p, ap.A.s], [ap.C.p, ap.D.s], [ap.D.p, ap.C.s], [ap.E.p, ap.F.s], [ap.F.p, ap.E.s], [ap.G.p, ap.H.s], [ap.H.p, ap.G.s]];
             const cont = document.getElementById('col-oitavos'); cont.innerHTML = '<h4>Oitavos</h4>';
             cruzamentos.forEach((jogo, i) => {
                 cont.innerHTML += `<div class="match-card" id="m-o-${i}">
@@ -313,23 +367,64 @@
             const m = document.getElementById(`m-${f}-${i}`); 
             const n = m.querySelectorAll('input[type="text"]'), s = m.querySelectorAll('input[type="number"]'), checks = m.querySelectorAll('.win-check');
             checks[0].classList.remove('active'); checks[1].classList.remove('active');
-            if(s[0].value==="" || s[1].value==="") return;
-            let idx = parseInt(s[0].value) > parseInt(s[1].value) ? 0 : 1;
-            checks[idx].classList.add('active'); pass(n[idx].value, i, p);
+            if(s[0].value === "" || s[1].value === "") return;
+            let v1 = parseInt(s[0].value), v2 = parseInt(s[1].value);
+            if (v1 > v2) { checks[0].classList.add('active'); pass(n[0].value, i, p, n[1].value); } 
+            else if (v2 > v1) { checks[1].classList.add('active'); pass(n[1].value, i, p, n[0].value); }
         }
 
         function forcar(f, i, idx, p) {
             const m = document.getElementById(`m-${f}-${i}`); 
             const n = m.querySelectorAll('input[type="text"]'), checks = m.querySelectorAll('.win-check');
             if(n[idx].value === "" || n[idx].value === "...") return;
-            checks[0].classList.remove('active'); checks[1].classList.remove('active'); checks[idx].classList.add('active');
-            pass(n[idx].value, i, p);
+            checks[0].classList.remove('active'); checks[1].classList.remove('active'); 
+            checks[idx].classList.add('active');
+            pass(n[idx].value, i, p, n[1-idx].value);
         }
 
-        function pass(v, i, p) {
-            if(p==='w') { document.getElementById('quadro-campeao').style.display = 'block'; document.getElementById('nome-campeao').innerText = v; return; }
+        function pass(v, i, p, perdeu) {
+            if(p==='w') { 
+                document.getElementById('quadro-campeao').style.display = 'block'; 
+                document.getElementById('nome-campeao').innerText = v; 
+                document.getElementById('info-vice').innerText = "Finalista: " + perdeu;
+                viceCampeaoGlobal = perdeu; 
+                return; 
+            }
             const pm = document.getElementById(`m-${p}-${Math.floor(i/2)}`);
             pm.querySelectorAll('input[type="text"]')[i%2].value = v;
+        }
+
+        function apagarRegistoCompleto(index) {
+            if(confirm("Apagar este torneio do histórico?")) {
+                const item = historicoCompleto[index];
+                const hIndex = historico.findIndex(h => h.v === item.v && h.p === item.p);
+                if(hIndex > -1) historico.splice(hIndex, 1);
+                historicoCompleto.splice(index, 1);
+                localStorage.setItem('ucl_full_history', JSON.stringify(historicoCompleto));
+                localStorage.setItem('fifa_hof', JSON.stringify(historico));
+                renderHOF();
+            }
+        }
+
+        function verTorneioAntigo(index) {
+            const t = historicoCompleto[index];
+            document.getElementById('main-menu').classList.add('hidden');
+            document.body.classList.add('view-only-mode');
+            const container = document.getElementById('torneio');
+            container.classList.remove('hidden');
+            container.innerHTML = t.html;
+            const novosInputs = container.querySelectorAll('input');
+            const checks = container.querySelectorAll('.win-check');
+            t.inputs.forEach((dados, i) => {
+                if(novosInputs[i]) novosInputs[i].value = dados.val;
+                if(checks[i] && dados.active) checks[i].classList.add('active');
+            });
+            document.getElementById('eliminatorias').classList.remove('hidden');
+            document.getElementById('quadro-campeao').style.display = 'block';
+            document.getElementById('btn-voltar').style.display = 'block';
+            document.getElementById('btn-finalizar').style.display = 'none';
+            if(document.getElementById('btn-apurar')) document.getElementById('btn-apurar').style.display = 'none';
+            window.scrollTo(0,0);
         }
 
         renderHOF();
