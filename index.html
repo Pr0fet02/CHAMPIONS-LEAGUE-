@@ -92,7 +92,8 @@
         
         .btn-main { background: linear-gradient(90deg, #00d4ff, #0055ff); color: #fff; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; }
         .btn-view { background: var(--ucl-accent); color: #000; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; }
-        .btn-delete { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 12px; padding: 0 5px; }
+        .btn-delete { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 12px; padding: 0 5px; opacity: 0.6; }
+        .btn-delete:hover { opacity: 1; transform: scale(1.2); }
 
         .campeao-final { display: none; text-align: center; padding: 40px; border: 2px solid var(--ucl-gold); border-radius: 20px; margin-top: 20px; background: rgba(0,0,0,0.5); }
         .hidden { display: none; }
@@ -117,7 +118,7 @@
 
         <div id="setup" class="setup-section no-print">
             <h1>🏆 Champions Management</h1>
-            <textarea id="listaEquipas">Real Madrid&#10;Manchester City&#10;Bayern&#10;PSG&#10;Inter&#10;Benfica&#10;Porto&#10;Sporting&#10;Arsenal&#10;Barcelona&#10;Dortmund&#10;Atletico&#10;Napoli&#10;Liverpool&#10;Leverkusen&#10;Juventus&#10;Milan&#10;Aston Villa&#10;Leipzig&#10;Monaco&#10;PSV&#10;Feyenoord&#10;Shakhtar&#10;Celtic</textarea>
+            <textarea id="listaEquipas">Real Madrid&#10;Manchester City&#10;Bayern&#10;PSG&#10;Inter&#10;Benfica&#10;Porto&#10;Sporting&#10;Arsenal&#10;Barcelona&#10;Dortmund&#10;Atletico Madrid&#10;Napoles&#10;Liverpool&#10;Bayer L.&#10;Juventus&#10;Milan&#10;Aston Villa&#10;Leipzig&#10;Monaco&#10;PSV&#10;Feyenoord&#10;Galatasaray&#10;Spurs</textarea>
             <br>
             <button class="btn-main" onclick="gerarTorneio()">Sortear Torneio</button>
 
@@ -126,7 +127,7 @@
                     <h3>📜 Histórico de Finais</h3>
                     <div class="table-wrapper">
                         <table>
-                            <thead><tr><th>Campeão</th><th>Finalista</th></tr></thead>
+                            <thead><tr><th>Campeão</th><th>Finalista</th><th style="width:20px"></th></tr></thead>
                             <tbody id="lista-finais"></tbody>
                         </table>
                     </div>
@@ -141,7 +142,7 @@
                     <h3>🏆 Ranking Títulos</h3>
                     <div class="table-wrapper">
                         <table>
-                            <thead><tr><th>Clube</th><th>Títulos</th></tr></thead>
+                            <thead><tr><th>Clube</th><th>Títulos</th><th style="width:20px"></th></tr></thead>
                             <tbody id="ranking-clubes"></tbody>
                         </table>
                     </div>
@@ -163,7 +164,6 @@
     <div id="torneio" class="hidden">
         <div class="grid-grupos" id="containerGrupos"></div>
         <div style="text-align: center; margin: 30px;" class="no-print"><button id="btn-apurar" class="btn-main" onclick="apurarOitavos()">Apurar Oitavos</button></div>
-        
         <div id="eliminatorias" class="hidden">
             <div class="diagrama-container">
                 <div class="fase-col" id="col-oitavos"><h4>Oitavos</h4></div>
@@ -172,7 +172,6 @@
                 <div class="fase-col" id="col-final"><h4>Final</h4></div>
             </div>
         </div>
-
         <div id="quadro-campeao" class="campeao-final">
             <div style="font-size: 50px;">🏆</div>
             <h1 id="nome-campeao">---</h1>
@@ -215,16 +214,24 @@
             logTorneios.innerHTML = '';
             let contagem = {};
 
-            // INVERTIDO: Criamos uma cópia do histórico e invertemos para mostrar os últimos em cima
-            [...historico].reverse().forEach(f => {
-                listaFinais.innerHTML += `<tr><td>⭐ <b>${f.v}</b></td><td>${f.p}</td></tr>`;
+            // Render Histórico com Lixo (Ordem Inversa para mostrar mais recente)
+            const histReverso = [...historico].reverse();
+            histReverso.forEach((f, idx) => {
+                // O index real no array original 'historico' é:
+                const realIdx = historico.length - 1 - idx;
+                listaFinais.innerHTML += `<tr>
+                    <td>⭐ <b>${f.v}</b></td>
+                    <td>${f.p}</td>
+                    <td><button class="btn-delete" onclick="apagarEntradaHistorico(${realIdx})">🗑️</button></td>
+                </tr>`;
             });
 
-            // Contagem para o ranking (mantém a lógica normal baseada no histórico real)
+            // Contagem para o ranking
             historico.forEach(f => {
                 contagem[f.v] = (contagem[f.v] || 0) + 1;
             });
 
+            // Render Arquivo
             historicoCompleto.forEach((torneio, index) => {
                 logTorneios.innerHTML += `<tr>
                     <td>${torneio.data}</td>
@@ -236,11 +243,40 @@
                 </tr>`;
             });
 
+            // Render Ranking com Lixo (apaga o título mais recente desse clube)
             rankingTable.innerHTML = '';
             Object.keys(contagem).sort((a,b) => contagem[b] - contagem[a]).forEach(clube => {
-                rankingTable.innerHTML += `<tr><td>${clube}</td><td><b>${contagem[clube]}</b> 🏆</td></tr>`;
+                rankingTable.innerHTML += `<tr>
+                    <td>${clube}</td>
+                    <td><b>${contagem[clube]}</b> 🏆</td>
+                    <td><button class="btn-delete" onclick="apagarPorRanking('${clube}')">🗑️</button></td>
+                </tr>`;
             });
         }
+
+        // --- NOVAS FUNÇÕES DE APAGAR ---
+        function apagarEntradaHistorico(index) {
+            if(confirm("Deseja remover este registo do histórico de finais?")) {
+                historico.splice(index, 1);
+                localStorage.setItem('fifa_hof', JSON.stringify(historico));
+                renderHOF();
+            }
+        }
+
+        function apagarPorRanking(clube) {
+            if(confirm(`Remover o título mais recente do ${clube}?`)) {
+                // Procura o último índice onde este clube foi vencedor
+                for (let i = historico.length - 1; i >= 0; i--) {
+                    if (historico[i].v === clube) {
+                        historico.splice(i, 1);
+                        break;
+                    }
+                }
+                localStorage.setItem('fifa_hof', JSON.stringify(historico));
+                renderHOF();
+            }
+        }
+        // ------------------------------
 
         function updateGlobalScore(p) { scores[p]++; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); }
         function resetGlobalScore() { if(confirm("Reiniciar placar?")) { scores = { goncalo: 0, tomas: 0 }; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); } }
@@ -277,6 +313,7 @@
             location.reload();
         }
 
+        // Funções de Gerar Torneio e Lógica de Jogo (Iguais ao original)
         function gerarTorneio() {
             const input = document.getElementById('listaEquipas').value;
             const equipas = input.split('\n').map(e => e.trim()).filter(e => e !== "");
@@ -287,7 +324,6 @@
             const container = document.getElementById('containerGrupos');
             container.innerHTML = "";
             const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-            
             letras.forEach(L => {
                 const e = [equipas.shift(), equipas.shift(), equipas.shift()];
                 container.innerHTML += `<div class="grupo" id="g-${L}">
