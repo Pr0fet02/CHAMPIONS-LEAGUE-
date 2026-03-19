@@ -161,7 +161,6 @@
 
         <div id="setup" class="setup-section no-print">
             <h1>🏆 Champions Management</h1>
-            
             <div class="lists-wrapper">
                 <div class="list-container">
                     <label>Equipas em Jogo (24)</label>
@@ -172,7 +171,6 @@
                     <textarea id="listaReserva">Roma&#10;Braga&#10;Newcastle&#10;Lyon&#10;Lazio&#10;Eintracht Frankfurt&#10;Athletic Bilbao&#10;Como 1907</textarea>
                 </div>
             </div>
-
             <button class="btn-main" onclick="iniciarSorteioAnimado()">Sortear Torneio</button>
 
             <div class="hall-of-fame-grid">
@@ -190,7 +188,6 @@
                         <button class="btn-main" style="padding: 5px 10px;" onclick="addFinalManual()">+</button>
                     </div>
                 </div>
-
                 <div class="hof-card">
                     <h3>🏆 Ranking Títulos</h3>
                     <div class="table-wrapper">
@@ -200,7 +197,6 @@
                         </table>
                     </div>
                 </div>
-
                 <div class="hof-card">
                     <h3>📅 Arquivo de Torneios</h3>
                     <div class="table-wrapper">
@@ -253,7 +249,7 @@
     </div>
 
     <script>
-      // --- LOGOS ---
+        // --- LOGOS ---
         const LOGO_MAP = {
             "real madrid": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
             "manchester city": "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
@@ -368,6 +364,9 @@
             const inps = document.querySelectorAll('#torneio input[type="number"]');
             saved.inputs.forEach((v, i) => { if(inps[i]) inps[i].value = v; });
             
+            // Recalcular as tabelas de grupos carregadas
+            Object.keys(gruposSorteados).forEach(L => calc(L));
+
             const checks = document.querySelectorAll('#torneio .win-check');
             saved.activeChecks.forEach((v, i) => { if(checks[i] && v) checks[i].classList.add('active'); });
 
@@ -517,6 +516,7 @@
         
         function calc(L) {
             const g = document.getElementById(`g-${L}`); 
+            if(!g) return;
             const inputs = g.querySelectorAll('input[type="number"]');
             let s = [{p:0, dg:0}, {p:0, dg:0}, {p:0, dg:0}];
             const f = (a, b, g1, g2) => {
