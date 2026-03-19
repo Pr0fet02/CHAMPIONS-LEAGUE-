@@ -117,7 +117,7 @@
         .btn-delete:hover { opacity: 1; transform: scale(1.2); }
 
         .campeao-final { display: none; text-align: center; padding: 40px; border: 2px solid var(--ucl-gold); border-radius: 20px; margin-top: 20px; background: rgba(0,0,0,0.5); }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         .view-only-mode input { pointer-events: none; border-color: transparent !important; }
         .view-only-mode .no-print, .view-only-mode .btn-main { display: none !important; }
         .view-only-mode #btn-voltar { display: block !important; position: fixed; top: 20px; left: 20px; z-index: 999; }
@@ -134,11 +134,22 @@
         .bola-sorteio:hover { transform: scale(1.2); box-shadow: 0 0 15px var(--ucl-accent); }
         .bola-sorteio.revelada { background: var(--ucl-gold); color: #000; font-size: 10px; font-weight: bold; cursor: default; transform: scale(0.9); opacity: 0.5; }
         .revelacao-anuncio { font-size: 20px; font-weight: bold; color: var(--ucl-gold); height: 30px; margin-top: 15px; }
+
+        /* NOVO BOTÃO DE RESET */
+        #btn-reset-torneio {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
 
     <button id="btn-voltar" class="btn-main" style="display:none;" onclick="location.reload()">⬅️ Voltar ao Menu</button>
+    <button id="btn-reset-torneio" class="btn-main no-print" onclick="resetTorneioAtual()">♻️ Reset Torneio</button>
 
     <div id="main-menu">
         <div class="scoreboard-global no-print">
@@ -313,6 +324,66 @@
         if(localStorage.getItem('ucl_lista_ativa')) document.getElementById('listaEquipas').value = localStorage.getItem('ucl_lista_ativa');
         if(localStorage.getItem('ucl_lista_reserva')) document.getElementById('listaReserva').value = localStorage.getItem('ucl_lista_reserva');
 
+        // --- LÓGICA DE PERSISTÊNCIA (AUTO-SAVE) ---
+        function saveTorneioData() {
+            const data = {
+                gruposSorteados,
+                potesAtuais,
+                poteFoco,
+                rebaixadosDestaEdicao,
+                inputs: Array.from(document.querySelectorAll('#torneio input[type="number"]')).map(i => i.value),
+                activeChecks: Array.from(document.querySelectorAll('#torneio .win-check')).map(c => c.classList.contains('active')),
+                vencedor: document.getElementById('nome-campeao').innerText,
+                oitavosHTML: document.getElementById('col-oitavos').innerHTML,
+                quartosHTML: document.getElementById('col-quartos').innerHTML,
+                meiasHTML: document.getElementById('col-meias').innerHTML,
+                finalHTML: document.getElementById('col-final').innerHTML,
+                emEliminatorias: !document.getElementById('eliminatorias').classList.contains('hidden')
+            };
+            localStorage.setItem('ucl_save_active', JSON.stringify(data));
+        }
+
+        function loadTorneioData() {
+            const saved = JSON.parse(localStorage.getItem('ucl_save_active'));
+            if (!saved) return;
+
+            gruposSorteados = saved.gruposSorteados;
+            potesAtuais = saved.potesAtuais;
+            poteFoco = saved.poteFoco;
+            
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('torneio').classList.remove('hidden');
+            document.getElementById('btn-reset-torneio').style.display = 'block';
+            
+            confirmarSorteio(true); // render grupos
+
+            if (saved.emEliminatorias) {
+                document.getElementById('eliminatorias').classList.remove('hidden');
+                document.getElementById('col-oitavos').innerHTML = saved.oitavosHTML;
+                document.getElementById('col-quartos').innerHTML = saved.quartosHTML;
+                document.getElementById('col-meias').innerHTML = saved.meiasHTML;
+                document.getElementById('col-final').innerHTML = saved.finalHTML;
+            }
+
+            const inps = document.querySelectorAll('#torneio input[type="number"]');
+            saved.inputs.forEach((v, i) => { if(inps[i]) inps[i].value = v; });
+            
+            const checks = document.querySelectorAll('#torneio .win-check');
+            saved.activeChecks.forEach((v, i) => { if(checks[i] && v) checks[i].classList.add('active'); });
+
+            if(saved.vencedor !== "---") {
+                document.getElementById('quadro-campeao').style.display = 'block';
+                document.getElementById('nome-campeao').innerText = saved.vencedor;
+            }
+        }
+
+        function resetTorneioAtual() {
+            if(confirm("Deseja apagar o torneio atual e começar do zero?")) {
+                localStorage.removeItem('ucl_save_active');
+                location.reload();
+            }
+        }
+
         function renderHOF() {
             document.getElementById('win-goncalo').innerText = scores.goncalo;
             document.getElementById('win-tomas').innerText = scores.tomas;
@@ -344,18 +415,16 @@
 
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('sorteio-area').classList.remove('hidden');
+            document.getElementById('btn-reset-torneio').style.display = 'block';
 
-            // Reset
             gruposSorteados = { A:[], B:[], C:[], D:[], E:[], F:[], G:[], H:[] };
             poteFoco = 1;
 
-            // Simulação de Potes (Baseado na tua lógica)
             let elite = equipas.slice(0,8).sort(() => Math.random() - 0.5);
             let media = equipas.slice(8,16).sort(() => Math.random() - 0.5);
             let sobreviventes = equipas.slice(16,24).sort(() => Math.random() - 0.5);
             potesAtuais = { 1: elite, 2: media, 3: sobreviventes };
 
-            // Render Potes
             [1,2,3].forEach(p => {
                 const div = document.getElementById(`pote-${p}`);
                 div.innerHTML = "";
@@ -364,12 +433,12 @@
                 });
             });
 
-            // Render Preview Vazio
             const prev = document.getElementById('preview-grupos');
             prev.innerHTML = "";
             ['A','B','C','D','E','F','G','H'].forEach(l => {
                 prev.innerHTML += `<div class="grupo" id="prev-g-${l}"><h3>Grupo ${l}</h3><ul id="ul-g-${l}" style="list-style:none;padding:0;font-size:12px;"></ul></div>`;
             });
+            saveTorneioData();
         }
 
         function clicarBola(p, i) {
@@ -379,8 +448,6 @@
 
             const equipa = potesAtuais[p][i];
             const letras = ['A','B','C','D','E','F','G','H'];
-            
-            // Achar grupo que ainda não tem equipa deste pote
             let letraAlvo = "";
             for(let l of letras) {
                 if(gruposSorteados[l].length < p) {
@@ -398,7 +465,6 @@
             li.innerHTML = `${getLogo(equipa)} ${equipa}`;
             document.getElementById(`ul-g-${letraAlvo}`).appendChild(li);
 
-            // Trocar de pote se acabar
             const reveladas = document.querySelectorAll(`#pote-${p} .bola-sorteio.revelada`).length;
             if(reveladas === 8) {
                 poteFoco++;
@@ -407,9 +473,10 @@
                     document.getElementById('btn-comecar-jogos').classList.remove('hidden');
                 }
             }
+            saveTorneioData();
         }
 
-        function confirmarSorteio() {
+        function confirmarSorteio(isLoad = false) {
             document.getElementById('sorteio-area').classList.add('hidden');
             document.getElementById('torneio').classList.remove('hidden');
             
@@ -427,9 +494,9 @@
                     </table>
                     <div class="jogos-area no-print">
                         <div class="inputs-placar">
-                            <div><input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"></div>
-                            <div><input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"></div>
-                            <div><input type="number" onchange="calc('${L}')"> x <input type="number" onchange="calc('${L}')"></div>
+                            <div><input type="number" onchange="calc('${L}');saveTorneioData()"> x <input type="number" onchange="calc('${L}');saveTorneioData()"></div>
+                            <div><input type="number" onchange="calc('${L}');saveTorneioData()"> x <input type="number" onchange="calc('${L}');saveTorneioData()"></div>
+                            <div><input type="number" onchange="calc('${L}');saveTorneioData()"> x <input type="number" onchange="calc('${L}');saveTorneioData()"></div>
                         </div>
                         <div class="labels-confronto">
                             <div class="confronto-text">⬅️ ${e[0]} vs ${e[1]}</div>
@@ -439,9 +506,9 @@
                     </div>
                 </div>`;
             });
+            if(!isLoad) saveTorneioData();
         }
 
-        // --- FUNÇÕES ORIGINAIS (SEM ALTERAÇÃO) ---
         function apagarEntradaHistorico(index) { if(confirm("Deseja remover este registo?")) { historico.splice(index, 1); localStorage.setItem('fifa_hof', JSON.stringify(historico)); renderHOF(); } }
         function apagarPorRanking(clube) { if(confirm(`Remover o título mais recente do ${clube}?`)) { for (let i = historico.length - 1; i >= 0; i--) { if (historico[i].v === clube) { historico.splice(i, 1); break; } } localStorage.setItem('fifa_hof', JSON.stringify(historico)); renderHOF(); } }
         function updateGlobalScore(p) { scores[p]++; localStorage.setItem('fifa_records', JSON.stringify(scores)); renderHOF(); }
@@ -481,18 +548,19 @@
             const cont = document.getElementById('col-oitavos'); cont.innerHTML = '<h4>Oitavos</h4>';
             cruzamentos.forEach((jogo, i) => {
                 cont.innerHTML += `<div class="match-card" id="m-o-${i}">
-                    <div class="team-row"><div class="team-input-wrapper">${getLogo(jogo[0])}<input type="text" value="${jogo[0]}" readonly></div><input type="number" onchange="avancar('o',${i},'q')"><span class="win-check" onclick="forcar('o',${i},0,'q')">V</span></div>
-                    <div class="team-row"><div class="team-input-wrapper">${getLogo(jogo[1])}<input type="text" value="${jogo[1]}" readonly></div><input type="number" onchange="avancar('o',${i},'q')"><span class="win-check" onclick="forcar('o',${i},1,'q')">V</span></div></div>`;
+                    <div class="team-row"><div class="team-input-wrapper">${getLogo(jogo[0])}<input type="text" value="${jogo[0]}" readonly></div><input type="number" onchange="avancar('o',${i},'q');saveTorneioData()"><span class="win-check" onclick="forcar('o',${i},0,'q');saveTorneioData()">V</span></div>
+                    <div class="team-row"><div class="team-input-wrapper">${getLogo(jogo[1])}<input type="text" value="${jogo[1]}" readonly></div><input type="number" onchange="avancar('o',${i},'q');saveTorneioData()"><span class="win-check" onclick="forcar('o',${i},1,'q');saveTorneioData()">V</span></div></div>`;
             });
             preGerar('q', 4, 'Quartos', 'm'); preGerar('m', 2, 'Meias', 'f'); preGerar('f', 1, 'Final', 'w');
+            saveTorneioData();
         }
 
         function preGerar(f, n, t, p) {
             const c = document.getElementById(`col-${{q:'quartos',m:'meias',f:'final'}[f]}`); c.innerHTML = `<h4>${t}</h4>`;
             for(let i=0; i<n; i++) {
                 c.innerHTML += `<div class="match-card" id="m-${f}-${i}">
-                    <div class="team-row"><div class="team-input-wrapper" id="tw-${f}-${i}-0">${getLogo("")}<input type="text" placeholder="..." readonly></div><input type="number" onchange="avancar('${f}',${i},'${p}')"><span class="win-check" onclick="forcar('${f}',${i},0,'${p}')">V</span></div>
-                    <div class="team-row"><div class="team-input-wrapper" id="tw-${f}-${i}-1">${getLogo("")}<input type="text" placeholder="..." readonly></div><input type="number" onchange="avancar('${f}',${i},'${p}')"><span class="win-check" onclick="forcar('${f}',${i},1,'${p}')">V</span></div></div>`;
+                    <div class="team-row"><div class="team-input-wrapper" id="tw-${f}-${i}-0">${getLogo("")}<input type="text" placeholder="..." readonly></div><input type="number" onchange="avancar('${f}',${i},'${p}');saveTorneioData()"><span class="win-check" onclick="forcar('${f}',${i},0,'${p}');saveTorneioData()">V</span></div>
+                    <div class="team-row"><div class="team-input-wrapper" id="tw-${f}-${i}-1">${getLogo("")}<input type="text" placeholder="..." readonly></div><input type="number" onchange="avancar('${f}',${i},'${p}');saveTorneioData()"><span class="win-check" onclick="forcar('${f}',${i},1,'${p}');saveTorneioData()">V</span></div></div>`;
             }
         }
 
@@ -541,6 +609,8 @@
             localStorage.setItem('ucl_full_history', JSON.stringify(historicoCompleto));
             historico.push({v: campeao, p: viceCampeaoGlobal});
             localStorage.setItem('fifa_hof', JSON.stringify(historico));
+            
+            localStorage.removeItem('ucl_save_active'); // Limpa save ao terminar
             location.reload();
         }
 
@@ -563,6 +633,7 @@
         function apagarRegistoCompleto(index) { if(confirm("Apagar este torneio?")) { historicoCompleto.splice(index, 1); localStorage.setItem('ucl_full_history', JSON.stringify(historicoCompleto)); renderHOF(); } }
 
         renderHOF();
+        loadTorneioData();
     </script>
 </body>
 </html>
