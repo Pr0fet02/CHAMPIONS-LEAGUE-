@@ -164,11 +164,11 @@
             <div class="lists-wrapper">
                 <div class="list-container">
                     <label>Equipas em Jogo (24)</label>
-                    <textarea id="listaEquipas">Real Madrid&#10;Manchester City&#10;Bayern&#10;PSG&#10;Inter&#10;Benfica&#10;Porto&#10;Sporting&#10;Arsenal&#10;Barcelona&#10;Dortmund&#10;Atletico Madrid&#10;Napoles&#10;Liverpool&#10;Bayer L.&#10;Juventus&#10;Milan&#10;Aston Villa&#10;Leipzig&#10;Monaco&#10;PSV&#10;Feyenoord&#10;Galatasaray&#10;Spurs</textarea>
+                    <textarea id="listaEquipas">Real Madrid&#10;Manchester City&#10;Bayern&#10;PSG&#10;Inter&#10;Benfica&#10;Porto&#10;Sporting&#10;Arsenal&#10;Barcelona&#10;Dortmund&#10;Atletico Madrid&#10;Napoles&#10;Liverpool&#10;Bayer L.&#10;Juventus&#10;Milan&#10;Aston Villa&#10;Leipzig&#10;Chelsea&#10;PSV&#10;Ajax&#10;Galatasaray&#10;Spurs</textarea>
                 </div>
                 <div class="list-container">
                     <label>Próximas a Entrar (8)</label>
-                    <textarea id="listaReserva">Roma&#10;Braga&#10;Newcastle&#10;Lyon&#10;Lazio&#10;Eintracht Frankfurt&#10;Athletic Bilbao&#10;Como 1907</textarea>
+                    <textarea id="listaReserva">Roma&#10;Real Sociedad&#10;Newcastle&#10;Lyon&#10;Manchester United&#10;Eintracht Frankfurt&#10;Athletic Bilbao&#10;Como 1907</textarea>
                 </div>
             </div>
             <button class="btn-main" onclick="iniciarSorteioAnimado()">Sortear Torneio</button>
@@ -270,16 +270,15 @@
             "milan": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg",
             "aston villa": "https://tmssl.akamaized.net/images/wappen/head/405.png",
             "leipzig": "https://upload.wikimedia.org/wikipedia/en/0/04/RB_Leipzig_2014_logo.svg",
-            "monaco": "https://tmssl.akamaized.net/images/wappen/head/162.png",
+            "chelsea": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg",
             "psv": "https://upload.wikimedia.org/wikipedia/en/0/05/PSV_Eindhoven.svg",
-            "feyenoord": "https://tmssl.akamaized.net/images/wappen/head/234.png",
+            "ajax": "https://upload.wikimedia.org/wikipedia/en/7/79/Ajax_Amsterdam.svg",
             "galatasaray": "https://tmssl.akamaized.net/images/wappen/head/141.png",
             "spurs": "https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg",
             "roma": "https://upload.wikimedia.org/wikipedia/en/f/f7/AS_Roma_logo_%282017%29.svg",
-            "braga": "https://upload.wikimedia.org/wikipedia/en/7/79/S.C._Braga_logo.svg",
+            "real sociedad": "https://upload.wikimedia.org/wikipedia/en/f/f1/Real_Sociedad_logo.svg",
             "manchester united": "https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg",
             "athletic bilbao": "https://tmssl.akamaized.net/images/wappen/head/621.png",
-            "lazio": "https://tmssl.akamaized.net/images/wappen/head/398.png",
             "newcastle": "https://tmssl.akamaized.net/images/wappen/head/762.png",
             "lyon": "https://tmssl.akamaized.net/images/wappen/head/1041.png",
             "como": "https://tmssl.akamaized.net/images/wappen/head/1047.png",
@@ -317,8 +316,18 @@
         let gruposSorteados = { A:[], B:[], C:[], D:[], E:[], F:[], G:[], H:[] };
         let poteFoco = 1;
 
-        if(localStorage.getItem('ucl_lista_ativa')) document.getElementById('listaEquipas').value = localStorage.getItem('ucl_lista_ativa');
-        if(localStorage.getItem('ucl_lista_reserva')) document.getElementById('listaReserva').value = localStorage.getItem('ucl_lista_reserva');
+        // CORREÇÃO: Forçar a lista do HTML se for diferente da guardada
+        const listaEquipasHTML = `Real Madrid\nManchester City\nBayern\nPSG\nInter\nBenfica\nPorto\nSporting\nArsenal\nBarcelona\nDortmund\nAtletico Madrid\nNapoles\nLiverpool\nBayer L.\nJuventus\nMilan\nAston Villa\nLeipzig\nChelsea\nPSV\nAjax\nGalatasaray\nSpurs`;
+        const listaReservaHTML = `Roma\nReal Sociedad\nNewcastle\nLyon\nManchester United\nEintracht Frankfurt\nAthletic Bilbao\nComo 1907`;
+
+        if(!localStorage.getItem('ucl_lista_ativa') || localStorage.getItem('ucl_force_update') !== "1") {
+            localStorage.setItem('ucl_lista_ativa', listaEquipasHTML);
+            localStorage.setItem('ucl_lista_reserva', listaReservaHTML);
+            localStorage.setItem('ucl_force_update', "1");
+        }
+
+        document.getElementById('listaEquipas').value = localStorage.getItem('ucl_lista_ativa');
+        document.getElementById('listaReserva').value = localStorage.getItem('ucl_lista_reserva');
 
         // --- LÓGICA DE PERSISTÊNCIA (AUTO-SAVE) ---
         function saveTorneioData() {
@@ -337,6 +346,9 @@
                 emEliminatorias: !document.getElementById('eliminatorias').classList.contains('hidden')
             };
             localStorage.setItem('ucl_save_active', JSON.stringify(data));
+            // Guardar também o estado das listas atuais para o próximo F5
+            localStorage.setItem('ucl_lista_ativa', document.getElementById('listaEquipas').value);
+            localStorage.setItem('ucl_lista_reserva', document.getElementById('listaReserva').value);
         }
 
         function loadTorneioData() {
@@ -351,7 +363,7 @@
             document.getElementById('torneio').classList.remove('hidden');
             document.getElementById('btn-reset-torneio').style.display = 'block';
             
-            confirmarSorteio(true); // render grupos
+            confirmarSorteio(true); 
 
             if (saved.emEliminatorias) {
                 document.getElementById('eliminatorias').classList.remove('hidden');
@@ -364,7 +376,6 @@
             const inps = document.querySelectorAll('#torneio input[type="number"]');
             saved.inputs.forEach((v, i) => { if(inps[i]) inps[i].value = v; });
             
-            // Recalcular as tabelas de grupos carregadas
             Object.keys(gruposSorteados).forEach(L => calc(L));
 
             const checks = document.querySelectorAll('#torneio .win-check');
@@ -406,7 +417,6 @@
             });
         }
 
-        // --- LOGICA DE SORTEIO ANIMADO ---
         function iniciarSorteioAnimado() {
             const input = document.getElementById('listaEquipas').value;
             const equipas = input.split('\n').map(e => e.trim()).filter(e => e !== "");
@@ -610,7 +620,7 @@
             historico.push({v: campeao, p: viceCampeaoGlobal});
             localStorage.setItem('fifa_hof', JSON.stringify(historico));
             
-            localStorage.removeItem('ucl_save_active'); // Limpa save ao terminar
+            localStorage.removeItem('ucl_save_active'); 
             location.reload();
         }
 
