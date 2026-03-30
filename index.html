@@ -144,10 +144,28 @@
             background: #ff4444;
             z-index: 1000;
         }
+
+        /* ESTILOS DOS BOTÕES DE NAVEGAÇÃO */
+        #btn-navegar-menu {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(0, 212, 255, 0.3);
+            border: 1px solid var(--ucl-accent);
+            display: none;
+        }
+        #btn-retornar-torneio {
+            background: var(--ucl-gold);
+            color: #000;
+            margin-bottom: 20px;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
+    <button id="btn-navegar-menu" class="btn-main no-print" onclick="irParaMenu()">📊 Menu Principal</button>
     <button id="btn-voltar" class="btn-main" style="display:none;" onclick="location.reload()">⬅️ Voltar ao Menu</button>
     <button id="btn-reset-torneio" class="btn-main no-print" onclick="resetTorneioAtual()">♻️ Reset Torneio</button>
 
@@ -161,6 +179,9 @@
 
         <div id="setup" class="setup-section no-print">
             <h1>🏆 Champions Management</h1>
+            
+            <button id="btn-retornar-torneio" class="btn-main" onclick="retornarAoTorneio()">⚽ Retornar ao Torneio</button>
+
             <div class="lists-wrapper">
                 <div class="list-container">
                     <label>Equipas em Jogo (24)</label>
@@ -329,6 +350,27 @@
         document.getElementById('listaEquipas').value = localStorage.getItem('ucl_lista_ativa');
         document.getElementById('listaReserva').value = localStorage.getItem('ucl_lista_reserva');
 
+        // --- FUNÇÕES DE NAVEGAÇÃO ---
+        function irParaMenu() {
+            document.getElementById('torneio').classList.add('hidden');
+            document.getElementById('sorteio-area').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            document.getElementById('btn-navegar-menu').style.display = 'none';
+            document.getElementById('btn-retornar-torneio').style.display = 'inline-block';
+        }
+
+        function retornarAoTorneio() {
+            document.getElementById('main-menu').classList.add('hidden');
+            // Verifica se estava no sorteio ou no torneio
+            if (poteFoco <= 3 && document.querySelectorAll('.bola-sorteio.revelada').length < 24) {
+                document.getElementById('sorteio-area').classList.remove('hidden');
+            } else {
+                document.getElementById('torneio').classList.remove('hidden');
+                document.getElementById('btn-navegar-menu').style.display = 'block';
+            }
+            document.getElementById('btn-retornar-torneio').style.display = 'none';
+        }
+
         // --- LÓGICA DE PERSISTÊNCIA (AUTO-SAVE) ---
         function saveTorneioData() {
             const data = {
@@ -346,7 +388,6 @@
                 emEliminatorias: !document.getElementById('eliminatorias').classList.contains('hidden')
             };
             localStorage.setItem('ucl_save_active', JSON.stringify(data));
-            // Guardar também o estado das listas atuais para o próximo F5
             localStorage.setItem('ucl_lista_ativa', document.getElementById('listaEquipas').value);
             localStorage.setItem('ucl_lista_reserva', document.getElementById('listaReserva').value);
         }
@@ -362,6 +403,7 @@
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('torneio').classList.remove('hidden');
             document.getElementById('btn-reset-torneio').style.display = 'block';
+            document.getElementById('btn-navegar-menu').style.display = 'block';
             
             confirmarSorteio(true); 
 
@@ -425,6 +467,7 @@
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('sorteio-area').classList.remove('hidden');
             document.getElementById('btn-reset-torneio').style.display = 'block';
+            document.getElementById('btn-navegar-menu').style.display = 'block';
 
             gruposSorteados = { A:[], B:[], C:[], D:[], E:[], F:[], G:[], H:[] };
             poteFoco = 1;
@@ -488,6 +531,7 @@
         function confirmarSorteio(isLoad = false) {
             document.getElementById('sorteio-area').classList.add('hidden');
             document.getElementById('torneio').classList.remove('hidden');
+            document.getElementById('btn-navegar-menu').style.display = 'block';
             
             const container = document.getElementById('containerGrupos');
             container.innerHTML = "";
